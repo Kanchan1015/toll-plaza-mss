@@ -3,59 +3,69 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>[Project Title]: Interactive Demo</title>
-<!--
-  STARTER TEMPLATE. The example simulation below is a Monte Carlo estimate of pi.
-  It is here only to show the required structure:
-    - at least three adjustable parameters
-    - Start / Pause / Reset
-    - a live visualisation
-    - at least one quantitative output, checked against a reference value
-    - an "About / How to use" panel
-  Replace the SIMULATION section and the controls with your own model.
--->
+<title>Toll Plaza Queue Simulation: Interactive Demo</title>
 <style>
-  :root { --ink:#1b2430; --muted:#5d6876; --line:#d8dee6; --accent:#1f6f8b; --bg:#f6f8fa; --ok:#1a7f37; --warn:#b35900; }
+  :root { --ink:#1b2430; --muted:#5d6876; --line:#d8dee6; --accent:#1f6f8b; --bg:#f6f8fa; --ok:#1a7f37; --warn:#b35900; --bad:#c0392b; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
   header { padding:16px 20px; background:#fff; border-bottom:1px solid var(--line); }
   header h1 { margin:0; font-size:1.3rem; }
   header p { margin:4px 0 0; color:var(--muted); font-size:.95rem; }
-  main { display:grid; grid-template-columns: 300px 1fr; gap:16px; padding:16px 20px; max-width:1200px; margin:0 auto; }
-  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  main { display:grid; grid-template-columns: 310px 1fr; gap:16px; padding:16px 20px; max-width:1280px; margin:0 auto; align-items:start; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
   .panel { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px; }
   label { display:block; font-size:.9rem; margin:12px 0 4px; }
+  label:first-child { margin-top:0; }
   label span { float:right; font-variant-numeric: tabular-nums; color:var(--muted); }
   input[type=range] { width:100%; }
   input[type=number] { width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; }
-  .buttons { display:flex; gap:8px; margin-top:16px; }
-  button { flex:1; padding:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; font-size:.95rem; cursor:pointer; }
+  .rho { margin-top:12px; padding:8px 10px; border-radius:6px; font-size:.88rem; background:var(--bg); border:1px solid var(--line); }
+  .rho.ok { border-color:var(--ok); } .rho.bad { border-color:var(--bad); color:var(--bad); }
+  .buttons { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  button { flex:1; min-width:80px; padding:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; font-size:.95rem; cursor:pointer; }
   button.secondary { background:#fff; color:var(--accent); }
-  canvas { width:100%; max-width:560px; aspect-ratio:1; display:block; margin:0 auto; background:#fff; border:1px solid var(--line); }
+  button:disabled { opacity:.5; cursor:default; }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline:3px solid #8cc4d8; outline-offset:2px; }
+  canvas { width:100%; display:block; background:#fff; border:1px solid var(--line); border-radius:6px; }
+  #view { aspect-ratio: 960 / 430; }
+  #chart { aspect-ratio: 960 / 200; margin-top:12px; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:.8rem; color:var(--muted); margin:8px 0 0; }
+  .legend i { display:inline-block; width:12px; height:8px; border-radius:2px; margin-right:5px; vertical-align:middle; }
   .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-top:14px; }
   .stat { border:1px solid var(--line); border-radius:6px; padding:10px; }
-  .stat .k { font-size:.8rem; color:var(--muted); }
-  .stat .v { font-size:1.2rem; font-variant-numeric: tabular-nums; }
-  .check.ok { color:var(--ok); } .check.warn { color:var(--warn); }
+  .stat .k { font-size:.78rem; color:var(--muted); }
+  .stat .v { font-size:1.1rem; font-variant-numeric: tabular-nums; }
+  .check.ok, .v.ok { color:var(--ok); } .check.warn, .v.warn { color:var(--warn); } .v.bad { color:var(--bad); }
   details { margin-top:16px; }
   summary { cursor:pointer; font-weight:600; }
   details p, details li { font-size:.92rem; line-height:1.45; }
+  footer { max-width:1280px; margin:0 auto; padding:0 20px 24px; color:var(--muted); font-size:.82rem; }
 </style>
 </head>
 <body>
 <header>
-  <h1>[Project Title]</h1>
-  <p>[One-sentence description of what the simulation shows.]</p>
+  <h1>Toll Plaza Queue Simulation</h1>
+  <p>How many toll booths must be open at peak time to keep the average wait under two minutes? Change the traffic and the booths, and watch the queue.</p>
 </header>
 
 <main>
   <section class="panel" aria-label="Controls">
-    <!-- REPLACE: your own parameters (at least three) -->
-    <label for="nTotal">Total samples <span id="nTotalVal"></span></label>
-    <input id="nTotal" type="range" min="1000" max="200000" step="1000" value="50000">
+    <label for="lam">Arrival rate &lambda; (cars/min) <span id="lamVal"></span></label>
+    <input id="lam" type="range" min="0.5" max="10" step="0.1" value="6">
 
-    <label for="speed">Samples per frame (speed) <span id="speedVal"></span></label>
-    <input id="speed" type="range" min="10" max="5000" step="10" value="200">
+    <label for="mu">Service rate &mu; per booth (cars/min) <span id="muVal"></span></label>
+    <input id="mu" type="range" min="0.5" max="5" step="0.1" value="2.5">
+
+    <label for="c">Open booths c <span id="cVal"></span></label>
+    <input id="c" type="range" min="1" max="8" step="1" value="3">
+
+    <div id="rho" class="rho"></div>
+
+    <label for="nTotal">Total cars to simulate <span id="nTotalVal"></span></label>
+    <input id="nTotal" type="range" min="2000" max="200000" step="2000" value="40000">
+
+    <label for="speed">Animation speed (simulated min per second) <span id="speedVal"></span></label>
+    <input id="speed" type="range" min="0" max="9" step="1" value="2">
 
     <label for="seed">Random seed</label>
     <input id="seed" type="number" value="42" min="1" step="1">
@@ -63,34 +73,53 @@
     <div class="buttons">
       <button id="startBtn">Start</button>
       <button id="resetBtn" class="secondary">Reset</button>
+      <button id="endBtn" class="secondary" title="Skip the animation and simulate all remaining cars at once">Run to end</button>
     </div>
 
     <details>
       <summary>About / How to use</summary>
-      <!-- REPLACE: explain your model, its parameters and how to read the outputs -->
-      <p>This example estimates &pi; by sampling random points in a unit square and counting the fraction that falls inside the quarter circle: &pi; &asymp; 4 &times; (inside / total).</p>
+      <p>This is a live simulation of cars at an expressway toll plaza. Cars arrive at random (average &lambda; per minute) and join <b>one first-come-first-served line</b>. Each open booth serves one car at a time, taking a random time with average 1/&mu; minutes. The program counts how long every car waits in line (before service starts).</p>
       <ul>
-        <li>Set the parameters, then press <b>Start</b>. <b>Pause</b> stops the run; <b>Reset</b> clears it and applies new settings.</li>
-        <li>The estimate is shown with a 95% confidence interval. The error should shrink roughly as 1/&radic;N.</li>
-        <li>The check compares the estimate with the reference value; the notebook gives the same result for the default settings.</li>
+        <li>Set &lambda;, &mu; and the number of booths, then press <b>Start</b>. <b>Pause</b> stops the run; <b>Reset</b> clears it. Changing a setting resets the run.</li>
+        <li><b>Run to end</b> skips the animation and simulates all the cars so you can read the final answer straight away.</li>
+        <li>Car colour shows waiting time: <span style="color:#1f6f8b">blue</span> under 1 min, <span style="color:#b07a00">amber</span> 1&ndash;2 min, <span style="color:#c0392b">red</span> over 2 min.</li>
+        <li><b>&rho; = &lambda; / (c&mu;)</b> is the traffic intensity. If &rho; &ge; 1 the booths cannot keep up and the line grows without limit.</li>
+        <li>The mean wait is shown with a 95% confidence interval (batch means, after a warm-up) and is compared with the exact Erlang C formula.</li>
       </ul>
     </details>
   </section>
 
   <section class="panel" aria-label="Simulation">
-    <canvas id="view" width="560" height="560" aria-label="Live visualisation"></canvas>
-    <div class="stats">
-      <div class="stat"><div class="k">Samples so far</div><div class="v" id="outN">0</div></div>
-      <div class="stat"><div class="k">Estimate &plusmn; 95% CI</div><div class="v" id="outEst">–</div></div>
-      <div class="stat"><div class="k">Reference value</div><div class="v" id="outRef">3.14159</div></div>
-      <div class="stat"><div class="k">Check</div><div class="v check" id="outCheck">–</div></div>
+    <canvas id="view" width="960" height="430" role="img" aria-label="Animated toll plaza: cars queue on the left and are served at the booths on the right"></canvas>
+    <div class="legend">
+      <span><i style="background:#1f6f8b"></i>waited &lt; 1 min</span>
+      <span><i style="background:#e0a100"></i>1&ndash;2 min</span>
+      <span><i style="background:#c0392b"></i>&gt; 2 min</span>
+      <span><i style="background:#2e9e5b"></i>booth free</span>
+      <span><i style="background:#e0a100;opacity:.6"></i>booth busy</span>
     </div>
+    <div class="stats" aria-live="polite">
+      <div class="stat"><div class="k">Simulated time</div><div class="v" id="outT">0.0 min</div></div>
+      <div class="stat"><div class="k">Cars arrived / served</div><div class="v" id="outN">0 / 0</div></div>
+      <div class="stat"><div class="k">Waiting now / booths busy</div><div class="v" id="outQ">0 / 0</div></div>
+      <div class="stat"><div class="k">Mean wait &plusmn; 95% CI (min)</div><div class="v" id="outEst">&ndash;</div></div>
+      <div class="stat"><div class="k">Exact value (Erlang C, min)</div><div class="v" id="outRef">&ndash;</div></div>
+      <div class="stat"><div class="k">Check against Erlang C</div><div class="v check" id="outCheck">&ndash;</div></div>
+      <div class="stat"><div class="k">Target: mean wait &lt; 2 min</div><div class="v" id="outTarget">&ndash;</div></div>
+      <div class="stat"><div class="k">Fewest booths that meet target (exact)</div><div class="v" id="outNeed">&ndash;</div></div>
+    </div>
+    <canvas id="chart" width="960" height="200" role="img" aria-label="Running mean waiting time against cars served"></canvas>
   </section>
 </main>
+<footer>Runs entirely in your browser; nothing is uploaded. Discrete-event simulation of an M/M/c queue with exponential gaps generated by inverse-transform sampling.</footer>
 
-<script>
-// ---------- seeded random number generator (reproducible runs) ----------
-function mulberry32(a) {
+<script id="engine">
+// =====================================================================
+//  SIMULATION ENGINE (no DOM access: can be tested on its own)
+// =====================================================================
+const TARGET = 2.0;                                   // minutes
+
+function mulberry32(a) {                              // seeded generator: same seed, same run
   return function () {
     a |= 0; a = a + 0x6D2B79F5 | 0;
     let t = Math.imul(a ^ a >>> 15, 1 | a);
@@ -99,83 +128,285 @@ function mulberry32(a) {
   };
 }
 
-// ---------- SIMULATION (REPLACE with your own model) ----------
-const REFERENCE = Math.PI;          // analytic / notebook reference value
-const sim = { rng: null, n: 0, inside: 0, nTotal: 0 };
-
-function initSim(params) {
-  sim.rng = mulberry32(params.seed);
-  sim.n = 0; sim.inside = 0; sim.nTotal = params.nTotal;
+function erlangC(c, lam, mu) {                        // probability an arriving car must wait
+  const a = lam / mu, rho = a / c;
+  if (rho >= 1) return 1;
+  let term = 1, sum = 1;                              // sum_{k=0}^{c-1} a^k/k!
+  for (let k = 1; k < c; k++) { term *= a / k; sum += term; }
+  const top = (term * a / c) / (1 - rho);             // a^c/c! /(1-rho)
+  return top / (sum + top);
+}
+function wqTheory(c, lam, mu) {                       // exact mean wait in line (Infinity if rho >= 1)
+  return lam >= c * mu ? Infinity : erlangC(c, lam, mu) / (c * mu - lam);
+}
+function fewestBooths(lam, mu, maxC) {                // smallest c with exact mean wait < target
+  for (let c = 1; c <= maxC; c++) if (wqTheory(c, lam, mu) < TARGET) return c;
+  return null;
 }
 
-function stepSim(k, draw) {                 // advance the model by k samples
-  for (let i = 0; i < k && sim.n < sim.nTotal; i++) {
-    const x = sim.rng(), y = sim.rng();
-    const hit = x * x + y * y <= 1;
-    sim.n++; if (hit) sim.inside++;
-    draw(x, y, hit);
+const T975 = [12.706,4.303,3.182,2.776,2.571,2.447,2.365,2.306,2.262,2.228,2.201,2.179,2.160,2.145,
+              2.131,2.120,2.110,2.101,2.093,2.086,2.080,2.074,2.069,2.064,2.060,2.056,2.052,2.048,2.045,2.042];
+function tcrit(df) { return df <= 30 ? T975[df - 1] : 1.96 + 2.4 / df; }
+
+const BATCH = 1000;                                   // cars per batch for the batch-means CI
+
+class Engine {
+  constructor(p) {                                    // p = {lam, mu, c, N, seed}
+    this.p = p;
+    this.rng = mulberry32(p.seed);
+    this.t = 0;                                       // simulation clock (minutes)
+    this.nArr = 0; this.nStart = 0;
+    this.queue = []; this.qh = 0;                     // FIFO line: queue[qh..] are waiting
+    this.dep = new Array(p.c).fill(Infinity);         // departure time of the car in each booth
+    this.serving = new Array(p.c).fill(null);
+    this.exiting = [];                                // cars that just left (for the animation only)
+    this.visual = true;
+    this.nextArr = this.expo(p.lam);
+    this.warm = Math.min(5000, Math.floor(p.N * 0.125));   // warm-up cars discarded
+    this.sumW = 0; this.nW = 0; this.bSum = 0; this.bN = 0; this.bMeans = [];
+    this.series = []; this.every = Math.max(1, Math.ceil((p.N - this.warm) / 300));
+    this.done = false;
+  }
+  expo(rate) { return -Math.log(1 - this.rng()) / rate; }      // inverse transform
+  get qLen() { return this.queue.length - this.qh; }
+  get busy() { let n = 0; for (const d of this.dep) if (d !== Infinity) n++; return n; }
+
+  peek() {                                            // time of the next event
+    let tm = this.nextArr;
+    for (const d of this.dep) if (d < tm) tm = d;
+    return tm;
+  }
+  step() {                                            // next-event time advance: jump to the next event
+    if (this.done) return false;
+    let tm = this.nextArr, k = -1;
+    for (let b = 0; b < this.p.c; b++) if (this.dep[b] < tm) { tm = this.dep[b]; k = b; }
+    if (tm === Infinity) return false;
+    this.t = tm;
+    if (k < 0) this.arrive(); else this.depart(k);
+    return true;
+  }
+  arrive() {
+    const car = { id: this.nArr++, arr: this.t, x: -40, y: null, wait: null, booth: -1 };
+    this.nextArr = this.nArr < this.p.N ? this.t + this.expo(this.p.lam) : Infinity;
+    const b = this.dep.indexOf(Infinity);             // a free booth?
+    if (b >= 0) this.startService(car, b); else this.queue.push(car);
+  }
+  depart(b) {
+    const car = this.serving[b];
+    this.serving[b] = null; this.dep[b] = Infinity;
+    if (this.visual && this.exiting.length < 400) this.exiting.push(car);
+    if (this.qh < this.queue.length) {
+      const next = this.queue[this.qh++];
+      if (this.qh > 2048 && this.qh * 2 > this.queue.length) { this.queue = this.queue.slice(this.qh); this.qh = 0; }
+      this.startService(next, b);
+    }
+  }
+  startService(car, b) {
+    car.wait = this.t - car.arr; car.booth = b;
+    this.serving[b] = car;
+    this.dep[b] = this.t + this.expo(this.p.mu);
+    const idx = this.nStart++;
+    if (idx >= this.warm) {                           // statistics only after the warm-up
+      this.sumW += car.wait; this.nW++; this.bSum += car.wait; this.bN++;
+      if (this.bN === BATCH) { this.bMeans.push(this.bSum / BATCH); this.bSum = 0; this.bN = 0; }
+      if (this.nW % this.every === 0) this.series.push([this.nW, this.sumW / this.nW]);
+    }
+    if (this.nStart === this.p.N) this.done = true;
+  }
+  estimate() {                                        // mean wait with 95% CI from batch means
+    const n = this.bMeans.length;
+    if (n < 10) return { n, est: this.nW ? this.sumW / this.nW : null, ci: null };
+    const m = this.bMeans.reduce((s, v) => s + v, 0) / n;
+    const v = this.bMeans.reduce((s, x) => s + (x - m) * (x - m), 0) / (n - 1);
+    return { n, est: m, ci: tcrit(n - 1) * Math.sqrt(v / n) };
+  }
+}
+</script>
+
+<script id="ui">
+// =====================================================================
+//  USER INTERFACE: controls, drawing, animation loop
+// =====================================================================
+const $ = (id) => document.getElementById(id);
+const SPEEDS = [0.1, 0.25, 0.5, 1, 2, 5, 20, 100, 500, 2000];   // simulated minutes per real second
+const view = $("view"), vctx = view.getContext("2d");
+const chart = $("chart"), cctx = chart.getContext("2d");
+const W = view.width, H = view.height;
+if (!CanvasRenderingContext2D.prototype.roundRect) {                 // older browsers: plain rectangles
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+}
+const COLS = 20, SLOT_W = 28, ROW_H = 34, QX = 650, MAXV = 160, BOOTH_X = 735;   // waiting line: 20 cars per row
+
+let eng = null, running = false, last = 0, clock = 0, token = 0;
+
+function params() {
+  return { lam: +$("lam").value, mu: +$("mu").value, c: +$("c").value, N: +$("nTotal").value,
+           seed: Math.max(1, Math.floor(+$("seed").value) || 1) };
+}
+function showParams() {
+  const p = params();
+  $("lamVal").textContent = p.lam.toFixed(1);
+  $("muVal").textContent = p.mu.toFixed(1);
+  $("cVal").textContent = p.c;
+  $("nTotalVal").textContent = p.N.toLocaleString();
+  $("speedVal").textContent = SPEEDS[+$("speed").value];
+  const rho = p.lam / (p.c * p.mu), el = $("rho");
+  el.className = "rho " + (rho >= 1 ? "bad" : "ok");
+  el.innerHTML = rho >= 1
+    ? `&rho; = ${rho.toFixed(2)} &ge; 1: cars arrive faster than the booths can serve them. The line will grow without limit.`
+    : `&rho; = &lambda; / (c&mu;) = ${rho.toFixed(2)} &lt; 1: the line can settle to a steady state.`;
+}
+
+// ---------- layout helpers ----------
+const boothY = (b) => (b + 1) * H / (eng.p.c + 1);
+// The line runs along the centre of the road towards the booths; long lines wrap into rows above and below.
+const rowOffset = (r) => (r === 0 ? 0 : (r % 2 ? -1 : 1) * Math.ceil(r / 2));
+const slotXY = (s) => [QX - (s % COLS) * SLOT_W, H / 2 + rowOffset(Math.floor(s / COLS)) * ROW_H];
+function carColour(w) { return w < 1 ? "#1f6f8b" : w < TARGET ? "#e0a100" : "#c0392b"; }
+
+function moveTo(car, tx, ty, k) {
+  if (car.y === null) car.y = ty;
+  car.x += (tx - car.x) * k; car.y += (ty - car.y) * k;
+}
+function drawCar(car, colour) {
+  vctx.fillStyle = colour;
+  vctx.beginPath(); vctx.roundRect(car.x - 11, car.y - 6, 22, 12, 3); vctx.fill();
+  vctx.fillStyle = "rgba(255,255,255,.55)"; vctx.fillRect(car.x + 2, car.y - 4, 5, 8);   // windscreen
+}
+
+function drawScene(dt) {
+  const k = 1 - Math.exp(-dt * 7);
+  vctx.clearRect(0, 0, W, H);
+  // road
+  vctx.fillStyle = "#eef1f4"; vctx.fillRect(0, 22, W, H - 44);
+  vctx.fillStyle = "#5d6876"; vctx.font = "12px system-ui, sans-serif"; vctx.textAlign = "left";
+  vctx.fillText("Arrivals →", 8, 16);
+  vctx.fillText("Single waiting line (first come, first served)", 200, 16);
+  vctx.fillText("Toll booths", BOOTH_X - 4, 16);
+  // booths
+  for (let b = 0; b < eng.p.c; b++) {
+    const busy = eng.serving[b] !== null, y = boothY(b);
+    vctx.fillStyle = busy ? "rgba(224,161,0,.25)" : "rgba(46,158,91,.22)";
+    vctx.strokeStyle = busy ? "#e0a100" : "#2e9e5b"; vctx.lineWidth = 2;
+    vctx.beginPath(); vctx.roundRect(BOOTH_X - 18, y - 17, 92, 34, 5); vctx.fill(); vctx.stroke();
+    vctx.fillStyle = "#1b2430"; vctx.textAlign = "left"; vctx.fillText("Booth " + (b + 1), BOOTH_X + 18, y + 4);
+  }
+  // waiting line
+  const vis = Math.min(eng.qLen, MAXV);
+  for (let s = 0; s < vis; s++) {
+    const car = eng.queue[eng.qh + s], [tx, ty] = slotXY(s);
+    moveTo(car, tx, ty, k);
+    drawCar(car, carColour(eng.t - car.arr));
+  }
+  if (eng.qLen > MAXV) {
+    vctx.fillStyle = "#c0392b"; vctx.font = "bold 13px system-ui, sans-serif"; vctx.textAlign = "left";
+    vctx.fillText(`+ ${(eng.qLen - MAXV).toLocaleString()} more cars waiting`, 12, H - 8);
+    vctx.font = "12px system-ui, sans-serif";
+  }
+  // cars in service
+  for (let b = 0; b < eng.p.c; b++) {
+    const car = eng.serving[b]; if (!car) continue;
+    moveTo(car, BOOTH_X + 4, boothY(b), k);
+    drawCar(car, carColour(car.wait));
+  }
+  // cars leaving
+  const keep = [];
+  for (const car of eng.exiting) {
+    if (car.y === null) continue;                     // finished before it was ever drawn (very high speed)
+    moveTo(car, W + 40, car.y, 1 - Math.exp(-dt * 3));
+    if (car.x < W + 10) { drawCar(car, carColour(car.wait)); keep.push(car); }
+  }
+  eng.exiting = keep;
+}
+
+function drawChart() {
+  const w = chart.width, h = chart.height, L = 52, R = 14, T = 14, B = 30;
+  cctx.clearRect(0, 0, w, h);
+  const pts = eng.series, p = eng.p, ref = wqTheory(p.c, p.lam, p.mu);
+  let ymax = TARGET * 1.4;
+  for (const q of pts) ymax = Math.max(ymax, q[1] * 1.15);
+  if (isFinite(ref)) ymax = Math.max(ymax, ref * 1.3);
+  const xmax = Math.max(1, p.N - eng.warm);
+  const X = (n) => L + (w - L - R) * n / xmax, Y = (v) => T + (h - T - B) * (1 - v / ymax);
+  cctx.strokeStyle = "#d8dee6"; cctx.lineWidth = 1; cctx.fillStyle = "#5d6876"; cctx.font = "12px system-ui, sans-serif";
+  cctx.textAlign = "right";
+  for (let i = 0; i <= 4; i++) { const v = ymax * i / 4, y = Y(v); cctx.beginPath(); cctx.moveTo(L, y); cctx.lineTo(w - R, y); cctx.stroke(); cctx.fillText(v < 10 ? v.toFixed(2) : v.toFixed(0), L - 6, y + 4); }
+  cctx.textAlign = "center"; cctx.fillText("cars counted after warm-up", (L + w - R) / 2, h - 6);
+  cctx.save(); cctx.translate(12, (T + h - B) / 2); cctx.rotate(-Math.PI / 2); cctx.fillText("running mean wait (min)", 0, 0); cctx.restore();
+  cctx.lineWidth = 1.5; cctx.setLineDash([6, 4]);
+  cctx.strokeStyle = "#c0392b"; cctx.beginPath(); cctx.moveTo(L, Y(TARGET)); cctx.lineTo(w - R, Y(TARGET)); cctx.stroke();
+  if (isFinite(ref)) { cctx.strokeStyle = "#1b2430"; cctx.beginPath(); cctx.moveTo(L, Y(ref)); cctx.lineTo(w - R, Y(ref)); cctx.stroke(); }
+  cctx.setLineDash([]);
+  cctx.textAlign = "left"; cctx.fillStyle = "#c0392b"; cctx.fillText("target 2 min", L + 6, Y(TARGET) - 5);
+  if (isFinite(ref)) { cctx.fillStyle = "#1b2430"; cctx.fillText("Erlang C " + ref.toFixed(3), L + 6, Y(ref) - 5); }
+  if (pts.length > 1) {
+    cctx.strokeStyle = "#1f6f8b"; cctx.lineWidth = 2; cctx.beginPath();
+    pts.forEach((q, i) => (i ? cctx.lineTo(X(q[0]), Y(q[1])) : cctx.moveTo(X(q[0]), Y(q[1]))));
+    cctx.stroke();
   }
 }
 
-function estimate() {                       // quantitative output with uncertainty
-  if (sim.n === 0) return null;
-  const p = sim.inside / sim.n;
-  const est = 4 * p;
-  const se = 4 * Math.sqrt(p * (1 - p) / sim.n);
-  return { est, ci: 1.96 * se };
-}
-
-// ---------- UI wiring (keep the pattern, adapt the details) ----------
-const $ = (id) => document.getElementById(id);
-const ctx = $("view").getContext("2d");
-let running = false, frame = null;
-
-function params() {
-  return { nTotal: +$("nTotal").value, speed: +$("speed").value, seed: Math.max(1, Math.floor(+$("seed").value) || 1) };
-}
-function showParams() {
-  $("nTotalVal").textContent = (+$("nTotal").value).toLocaleString();
-  $("speedVal").textContent = (+$("speed").value).toLocaleString();
-}
-function clearView() {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, w);
-  ctx.strokeStyle = "#1b2430"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, w, w, -Math.PI / 2, 0); ctx.stroke();
-}
-function drawPoint(x, y, hit) {
-  const w = ctx.canvas.width;
-  ctx.fillStyle = hit ? "rgba(31,111,139,0.55)" : "rgba(179,89,0,0.55)";
-  ctx.fillRect(x * w, (1 - y) * w, 1.5, 1.5);
-}
+function setOut(id, text, cls) { const e = $(id); e.textContent = text; e.className = "v" + (cls ? " " + cls : ""); }
 function showOutputs() {
-  $("outN").textContent = sim.n.toLocaleString();
-  const e = estimate();
-  if (!e) { $("outEst").textContent = "–"; $("outCheck").textContent = "–"; $("outCheck").className = "v check"; return; }
-  $("outEst").textContent = `${e.est.toFixed(4)} ± ${e.ci.toFixed(4)}`;
-  const ok = Math.abs(e.est - REFERENCE) <= e.ci;
-  $("outCheck").textContent = ok ? "Within CI" : "Outside CI";
-  $("outCheck").className = "v check " + (ok ? "ok" : "warn");
+  const p = eng.p, e = eng.estimate(), ref = wqTheory(p.c, p.lam, p.mu), rho = p.lam / (p.c * p.mu);
+  setOut("outT", eng.t.toFixed(1) + " min");
+  setOut("outN", eng.nArr.toLocaleString() + " / " + eng.nStart.toLocaleString());
+  setOut("outQ", eng.qLen.toLocaleString() + " / " + eng.busy + " of " + p.c);
+  setOut("outRef", isFinite(ref) ? ref.toFixed(4) : "infinite (ρ ≥ 1)");
+  const need = fewestBooths(p.lam, p.mu, 40);
+  setOut("outNeed", need === null ? "more than 40" : String(need));
+  if (e.est === null) { setOut("outEst", "–"); } else if (e.ci === null) { setOut("outEst", e.est.toFixed(3) + " (collecting)"); }
+  else { setOut("outEst", e.est.toFixed(4) + " ± " + e.ci.toFixed(4)); }
+  if (rho >= 1) {
+    setOut("outCheck", "No steady state (ρ ≥ 1)", "check warn");
+    setOut("outTarget", e.est === null ? "Queue grows without limit" : "Not met: queue grows without limit", "bad");
+  } else if (e.ci === null) {
+    setOut("outCheck", "Collecting data…", "check"); setOut("outTarget", "–");
+  } else {
+    const ok = Math.abs(e.est - ref) <= e.ci;
+    setOut("outCheck", ok ? "Within CI ✓" : "Outside CI", "check " + (ok ? "ok" : "warn"));
+    setOut("outTarget", e.est + e.ci < TARGET ? "Met" : e.est - e.ci > TARGET ? "Not met" : "Unclear yet", e.est + e.ci < TARGET ? "ok" : e.est - e.ci > TARGET ? "bad" : "warn");
+  }
 }
-function loop() {
-  stepSim(params().speed, drawPoint);
-  showOutputs();
-  if (sim.n >= sim.nTotal) { stop(); $("startBtn").textContent = "Done"; $("startBtn").disabled = true; return; }
-  frame = requestAnimationFrame(loop);
+
+// ---------- run control ----------
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (running) {
+    clock += SPEEDS[+$("speed").value] * dt;
+    let guard = 0;
+    while (!eng.done && eng.peek() <= clock && guard++ < 20000) eng.step();
+    if (eng.done) finish();
+  }
+  drawScene(dt); drawChart(); showOutputs();
+  requestAnimationFrame(frame);
 }
-function start() { running = true; $("startBtn").textContent = "Pause"; frame = requestAnimationFrame(loop); }
-function stop() { running = false; if (frame) cancelAnimationFrame(frame); $("startBtn").textContent = "Start"; }
+function finish() { running = false; $("startBtn").textContent = "Done"; $("startBtn").disabled = true; $("endBtn").disabled = true; }
+function start() { running = true; $("startBtn").textContent = "Pause"; }
+function stop() { running = false; $("startBtn").textContent = "Start"; }
 function reset() {
-  stop(); initSim(params()); clearView(); showOutputs();
-  $("startBtn").disabled = false; $("startBtn").textContent = "Start";
+  token++; running = false; clock = 0;
+  eng = new Engine(params());
+  $("startBtn").textContent = "Start"; $("startBtn").disabled = false; $("endBtn").disabled = false;
+  showParams();
+}
+function runToEnd() {                                 // simulate everything without animation
+  const my = ++token; running = false; eng.visual = false;
+  $("startBtn").disabled = true; $("endBtn").disabled = true;
+  (function chunk() {
+    if (my !== token) return;
+    for (let i = 0; i < 200000 && !eng.done; i++) if (!eng.step()) break;
+    if (eng.done) { eng.visual = true; clock = eng.t; finish(); } else setTimeout(chunk, 0);
+  })();
 }
 
 $("startBtn").addEventListener("click", () => (running ? stop() : start()));
 $("resetBtn").addEventListener("click", reset);
-["nTotal", "speed"].forEach((id) => $(id).addEventListener("input", showParams));
-["nTotal", "seed"].forEach((id) => $(id).addEventListener("change", reset));
-$("outRef").textContent = REFERENCE.toFixed(5);
-showParams(); reset();
+$("endBtn").addEventListener("click", runToEnd);
+["lam", "mu", "c", "nTotal", "speed"].forEach((id) => $(id).addEventListener("input", showParams));
+["lam", "mu", "c", "nTotal", "seed"].forEach((id) => $(id).addEventListener("change", reset));
+reset();
+requestAnimationFrame((t) => { last = t; frame(t); });
 </script>
 </body>
 </html>
