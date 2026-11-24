@@ -107,7 +107,7 @@ All values below are produced by the notebook (seed 42 unless stated). Settings:
 | Sensitivity: elasticity of $W_q$ to $\lambda$ ($\pm5\%$, $c=3$) | $+6.27$ (Erlang C) | $+6.32\pm0.16$ | yes |
 | Sensitivity: elasticity of $W_q$ to $\mu$ | $-7.52$ (Erlang C) | $-7.58\pm0.17$ | yes |
 
-The first five rows are enforced with `assert` statements (5% tolerance), so the notebook stops if the simulator ever disagrees with theory. Because consecutive cars in a queue are correlated, the interval covers slightly less than 95% of the time, as the coverage row shows.
+The first five rows are enforced with `assert` statements (5% tolerance), so the notebook stops if the simulator ever disagrees with theory. The coverage result of 91 out of 100 is about 1.8 standard deviations below 95 (a count out of 100 has a standard deviation of about 2.2), so it is consistent with chance; the 100 estimates average 0.4303 min against the exact 0.4315 min, so there is no meaningful bias.
 
 ![Verification plot](figures/verification.png)
 
